@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  <title>Local Persistence</title>
+</head>
+<body>
+  <main>
+    <h1>Local Persistence</h1>
+
+    <section>
+      <h2>Persistence API</h2>
+      <p>
+        Persisting data from a client-side app needs to be simple and also easy!
+      </p>
+      <pre><code>
+// Set simple Key/Value pair
+db.setItem('key', 'val')
+
+// Set a key to a JSON Object
+db.setItem('object', {
+  some: "cool",
+  json: "node"
+})
+
+// That is maybe deeply nested and complex
+db.setItem('objectItem', {
+  some: "cool",
+  json: {
+    nested: "thing",
+    values: [0, 1, 2, 3],
+    deeper: {
+      more: "more!"
+    }
+  }
+})
+
+// Or an Array!
+db.setItem('arrayItem', [0, 1, 2, 3])
+
+// Or a complicated array!
+db.setItem('arrayItem', [0, {key: "value"}, 2])
+
+// What if we want to update object keys?
+db.updateItem('objectItem', {
+  json: {
+    nested: "Thang"
+  }
+})
+
+// Now we can get items too!
+db.getItem('key')
+// returns 'val'
+db.getItem('objectItem')
+// returns {
+//   some: "cool",
+//   json: {
+//     nested: "thang",
+//     values: [0, 1, 2, 3],
+//     deeper: {
+//       more: "more!"
+//     }
+//   }
+// })
+
+// And maybe a way to get em all
+db.getItems()
+// returns […items]
+
+// And finally, we can delete things:
+db.delItem('key')
+db.delItem('objectItem')
+db.delItem('arrayItem')
+
+      </code></pre>
+    </section>
+  </main>
+  <footer>
+    <p>Part of the <a href="https://rdf.systems/">RDF Systems</a> Project</p>
+    <p>
+      2024 <a href="https://stucco.software/">Stucco Software</a>
+    </p>
+  </footer>
+  <script type="module" type="text/javascript" src="/main.js"></script>
+</body>
+</html>

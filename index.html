@@ -67,13 +67,15 @@ db.getItem('objectItem')
 
 // And maybe a way to get em all
 db.getItems()
-// returns […items]
+// returns Map([…[id, value]])
 
 // And finally, we can delete things:
 db.delItem('key')
 db.delItem('objectItem')
 db.delItem('arrayItem')
 
+// or ALL the things!
+db.clear()
       </code></pre>
     </section>
   </main>

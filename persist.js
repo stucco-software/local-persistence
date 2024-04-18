@@ -1,5 +1,27 @@
 let genericStoreLabel = 'generic'
 
+const storeSuccess = (e) => {}
+
+const storeError = (e) => console.log(e)
+
+const reqPut = (store) => (obj) => {
+  let req = store.put(obj)
+  req.onsuccess = storeSuccess
+  req.onerror = storeError
+}
+
+const reqAdd = (store) => (obj) => {
+  let req = store.add(obj)
+  req.onsuccess = storeSuccess
+  req.onerror = storeError
+}
+
+const reqDel = (store) => (key) => {
+  let req = store.delete(key)
+  req.onsuccess = storeSuccess
+  req.onerror = storeError
+}
+
 const setItem = ({db, name}) => (key, val) => new Promise((resolve, reject) => {
   const trx = db.transaction([genericStoreLabel], 'readwrite')
   trx.oncomplete = () => resolve(true)
@@ -8,49 +30,60 @@ const setItem = ({db, name}) => (key, val) => new Promise((resolve, reject) => {
   const objectStore = trx.objectStore(genericStoreLabel)
   const reqGet = objectStore.get(key)
   reqGet.onsuccess = (e) => {
-    console.log('get the thing?')
-    console.log(key)
-    console.log(e.target.result)
     if (e.target.result) {
-      console.log('put this thing to store')
-      const reqPut = objectStore.put({
-        id: key,
-        val
-      })
-      reqPut.onsuccess = (event) => {
-        console.log('did put the thing in the store')
-      }
-      reqPut.onerror = (event) => {
-        console.log('objectStoreRequest error')
-        console.log(event)
-      }
-    } else {
-      console.log('add new thing to store')
-      const reqAdd = objectStore.add({
-        id: key,
-        val
-      })
-      reqAdd.onsuccess = (event) => {
-        console.log('did put the thing in the store')
-      }
-      reqAdd.onerror = (event) => {
-        console.log('objectStoreRequest error')
-        console.log(event)
-      }
+      reqDel(objectStore)(key)
     }
+    reqAdd(objectStore)({
+      id: key,
+      val
+    })
   }
-
-  return true
 })
 
-// const getItem = db => async (key) => {
-//   console.log('getItem', key)
-//   return true
-// }
-// const getItems = db => async () => {
-//   console.log('getItems', [])
-//   return true
-// }
+const updateItem = ({db, name}) => (key, val) => new Promise((resolve, reject) => {
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
+  let old
+  let updated
+  trx.oncomplete = () => resolve(updated)
+  trx.onerror = (e) => reject(e)
+
+  const objectStore = trx.objectStore(genericStoreLabel)
+  const reqGet = objectStore.get(key)
+  reqGet.onsuccess = (e) => {
+    old = e.target.result.val
+    updated = Object.assign(old, val)
+    reqPut(objectStore)({
+      id: key,
+      val: updated
+    })
+  }
+})
+
+const getItem = ({db, name}) => (key) => new Promise((resolve, reject) => {
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
+  let result
+  trx.oncomplete = () => resolve(result)
+  trx.onerror = (e) => reject(e)
+
+  const objectStore = trx.objectStore(genericStoreLabel)
+  const reqGet = objectStore.get(key)
+  reqGet.onsuccess = (e) => {
+    result = e.target.result.val
+  }
+})
+
+const getItems = ({db, name}) => (key) => new Promise((resolve, reject) => {
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
+  let result = new Map()
+  trx.oncomplete = () => resolve(result)
+  trx.onerror = (e) => reject(e)
+
+  const objectStore = trx.objectStore(genericStoreLabel)
+  const reqGetAll = objectStore.getAll()
+  reqGetAll.onsuccess = (e) => {
+    result = new Map(event.target.result.map((obj) => [obj.id, obj.val]))
+  }
+})
 // const delItem = db => async (key) => {
 //   console.log('delItem', key)
 //   return true
@@ -63,10 +96,11 @@ const setItem = ({db, name}) => (key, val) => new Promise((resolve, reject) => {
 const methods = ({db, name}) => {
   return {
     setItem: setItem({db, name}),
-    // getItem: getItem({db, name}),
-    // getItems: getItems({db, name}),
+    updateItem: updateItem({db, name}),
+    getItem: getItem({db, name}),
+    getItems: getItems({db, name}),
     // delItem: delItem({db, name}),
-    // updateItem: updateItem({db, name})
+    // clear: clear({db, name})
   }
 }
 

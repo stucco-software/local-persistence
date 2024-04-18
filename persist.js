@@ -84,14 +84,23 @@ const getItems = ({db, name}) => (key) => new Promise((resolve, reject) => {
     result = new Map(event.target.result.map((obj) => [obj.id, obj.val]))
   }
 })
-// const delItem = db => async (key) => {
-//   console.log('delItem', key)
-//   return true
-// }
-// const updateItem = db => async (key, val) => {
-//   console.log('updateItem', key, val)
-//   return true
-// }
+
+const delItem = ({db, name}) => (key) => new Promise((resolve, reject) => {
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
+  trx.oncomplete = () => resolve(true)
+  trx.onerror = (e) => reject(e)
+
+  const objectStore = trx.objectStore(genericStoreLabel)
+  reqDel(objectStore)(key)
+})
+
+const clear = ({db, name}) => () => new Promise((resolve, reject) => {
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
+  trx.oncomplete = () => resolve(true)
+  trx.onerror = (e) => reject(e)
+  const objectStore = trx.objectStore(genericStoreLabel)
+  objectStore.clear()
+})
 
 const methods = ({db, name}) => {
   return {
@@ -99,8 +108,8 @@ const methods = ({db, name}) => {
     updateItem: updateItem({db, name}),
     getItem: getItem({db, name}),
     getItems: getItems({db, name}),
-    // delItem: delItem({db, name}),
-    // clear: clear({db, name})
+    delItem: delItem({db, name}),
+    clear: clear({db, name})
   }
 }
 

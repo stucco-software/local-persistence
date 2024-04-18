@@ -1,9 +1,45 @@
+let genericStoreLabel = 'generic'
+
 const setItem = ({db, name}) => (key, val) => new Promise((resolve, reject) => {
-  const trx = db.transaction([name], 'readwrite')
+  const trx = db.transaction([genericStoreLabel], 'readwrite')
   trx.oncomplete = () => resolve(true)
   trx.onerror = (e) => reject(e)
-  console.log('setItem', key, val)
-  console.log(db, name)
+
+  const objectStore = trx.objectStore(genericStoreLabel)
+  const reqGet = objectStore.get(key)
+  reqGet.onsuccess = (e) => {
+    console.log('get the thing?')
+    console.log(key)
+    console.log(e.target.result)
+    if (e.target.result) {
+      console.log('put this thing to store')
+      const reqPut = objectStore.put({
+        id: key,
+        val
+      })
+      reqPut.onsuccess = (event) => {
+        console.log('did put the thing in the store')
+      }
+      reqPut.onerror = (event) => {
+        console.log('objectStoreRequest error')
+        console.log(event)
+      }
+    } else {
+      console.log('add new thing to store')
+      const reqAdd = objectStore.add({
+        id: key,
+        val
+      })
+      reqAdd.onsuccess = (event) => {
+        console.log('did put the thing in the store')
+      }
+      reqAdd.onerror = (event) => {
+        console.log('objectStoreRequest error')
+        console.log(event)
+      }
+    }
+  }
+
   return true
 })
 
@@ -36,12 +72,21 @@ const methods = ({db, name}) => {
 
 const client = (name = 'persistence') => new Promise((resolve, reject) => {
   let db
-  const DBOpenRequest = window.indexedDB.open(name)
+  const DBOpenRequest = window.indexedDB.open(name, 2)
 
-  DBOpenRequest.onerror = (e) => reject(e)
+  DBOpenRequest.onerror = (e) => {
+    console.log('DBOpenRequest error')
+    console.log(e)
+    reject(e)
+  }
   DBOpenRequest.onsuccess = (e) => {
     db = DBOpenRequest.result
     resolve(methods({db, name}))
+  }
+  DBOpenRequest.onupgradeneeded = (event) => {
+    db = event.target.result
+    // Create an objectStore for this database
+    const objectStore = db.createObjectStore(genericStoreLabel, { keyPath: 'id' })
   }
 })
 
